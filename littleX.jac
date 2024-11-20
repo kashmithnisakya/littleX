@@ -19,6 +19,8 @@ node Comment {
 
 edge follow{}
 
+edge like{}
+
 walker visit_profile {
     has username: str;
     can visit_profile with `root entry {
@@ -104,13 +106,16 @@ walker create_tweet :visit_profile: {
     }
 }
 
-# walker like_tweet :visit_profile: {
-#     has tweet_id: str;
+walker like_tweet :visit_profile: {
+    has tweet_id: str;
 
-#     can like with Profile entry {
-#         here +:like():+> (tweet := &self.tweet_id);
-#     }
-# }
+    can like with profile entry {
+        tweet_node = &self.tweet_id;
+        here +:like():+> (tweet := tweet_node);
+        logger.info(f"liked to a tweet: {tweet_node}");
+        report tweet_node;
+    }
+}
 
 # walker comment_tweet :visit_profile: {
 #     has tweet_id: str;

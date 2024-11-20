@@ -145,14 +145,15 @@ walker add_hastag: visit_profile: {
         }
     }
 
-    can add_hash_tag with tweet enrty{
+    can add_hash_tag with tweet entry{
         hashtag_node = here++>hashtag(content=self.content);
         logger.info("hashtag added");
-        vist hashtag; 
+        visit hashtag; 
     }
     
     can report_hashtag with hashtag entry{
         logger.info(f"hashtag: {here}");
+        Jac.unrestrict(here, level="READ");
         report here;
     }
 }

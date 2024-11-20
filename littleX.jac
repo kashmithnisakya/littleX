@@ -13,7 +13,7 @@ node tweet {
     has content: str;
 }
 
-node Comment {
+node comment {
     has content: str;
 }
 
@@ -117,57 +117,20 @@ walker like_tweet :visit_profile: {
     }
 }
 
-# walker comment_tweet :visit_profile: {
-#     has tweet_id: str;
-#     has content: str;
+walker comment_tweet :visit_profile: {
+    has tweet_id: str;
+    has content: str;
 
-#     can comment with Profile entry {
-#         embedding_str = base64.b64encode(model.encode(self.content)).decode(
-#             'utf-8'
-#         );
-#         (tweet := &self.tweet_id) ++> (comment := Comment(self.content, embedding_str));
-#         Jac.unrestrict(comment, 1);
-#         report jid(comment);
-#     }
-# }
+    can add_comment with profile entry {
+        comment_node = here ++> comment(content=self.content);
+        (tweet := &self.tweet_id) ++> comment_node[0];
+        logger.info(f"comment added: {comment_node[0]}");
+        report comment_node[0];
+    }
+}
 
-# walker search_tweets :visit_profile: {
-#     has query: str;
-
-#     can search with Profile entry {
-#         :g: Hastag ;
-
-
-#         result = [];
-#         if (i := [Hastag-:tag:name == self.query:->]) {
-#             tweets = i;
-#             for tweet in tweets {
-#                 user = [tweet<-:post:-][0];
-#                 result.append(
-#                     [tweet.content, user.username, len([tweet<-:like:-])]
-#                 );
-#             }
-#         } else {
-#             tweets = [];
-#             for user in [here-:follow:->] {
-#                 for tweet in [user-->(`?Tweet)] {
-#                     tweets.append(
-#                         (tweet.content, user.username, len([tweet<-:like:-]))
-#                     );
-#                 }
-#             }
-#             docs = [tweet[0] for tweet in tweets];
-#             scores = util.dot_score(
-#                 model.encode(self.query),
-#                 model.encode(docs)
-#             )[0].cpu().tolist();
-#             doc_score_pairs = list(zip([i for (i, _) in enumerate(docs)], scores));
-#             doc_score_pairs = sorted(
-#                 doc_score_pairs,
-#                 key=(with x: int can x[1]), reverse=True
-#             );
-#             result = [tweets[i] for (i, _) in doc_score_pairs[:5]];
-#         }
-#         report result;
-#     }
-# }
+walker print_root{
+    can print_root with `root entry{
+        print(dotgen(root));
+    }
+}

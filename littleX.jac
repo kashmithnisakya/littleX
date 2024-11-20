@@ -1,10 +1,10 @@
 import:py logging;
 import:py from jac_cloud.core.architype {NodeAnchor}
 
-glob logger = logging.getLogger("littelX");
+glob logger = logging.getLogger("littleX");
 
 node profile {
-    has username: str;
+    has username: str = "";
     has count_tag: dict = {};
     has followees: list = [];
 }
@@ -17,16 +17,19 @@ node comment {
     has content: str;
 }
 
+node hashtag{
+    has content:str;
+}
+
 edge follow{}
 
 edge like{}
 
 walker visit_profile {
-    has username: str;
     can visit_profile with `root entry {
         visit [-->(`?profile)] else {
             logger.info("Creating new profile");
-            new_profile = here ++> profile(username=self.username);
+            new_profile = here ++> profile();
             visit new_profile;
         }
     }
@@ -125,12 +128,31 @@ walker comment_tweet :visit_profile: {
         comment_node = here ++> comment(content=self.content);
         (tweet := &self.tweet_id) ++> comment_node[0];
         logger.info(f"comment added: {comment_node[0]}");
+        Jac.unrestrict(comment_node[0], level="READ");
         report comment_node[0];
     }
 }
 
-walker print_root{
-    can print_root with `root entry{
-        print(dotgen(root));
+walker add_hastag: visit_profile: {
+    has tweet_id: str;
+    has content: str;
+
+    can get_tweet with profile entry{
+        tweet_node = &self.tweet_id;
+        if tweet_node{
+            logger.info("tweet found");
+            visit tweet_node;
+        }
+    }
+
+    can add_hash_tag with tweet enrty{
+        hashtag_node = here++>hashtag(content=self.content);
+        logger.info("hashtag added");
+        vist hashtag; 
+    }
+    
+    can report_hashtag with hashtag entry{
+        logger.info(f"hashtag: {here}");
+        report here;
     }
 }
